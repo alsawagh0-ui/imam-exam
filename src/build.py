@@ -56,7 +56,7 @@ def split_lessons(md_text, pool):
     return [L for L in out if L["md"] or L["q"]]
 
 SUBJECTS = {
-    "fiqh":    {"name": "الفقه",       "file": "01-الفقه-مفيد-الصاحب.md",      "source": "دليل الطالب لنيل المطالب (المصدر المعتمد) + مختصراته"},
+    "fiqh":    {"name": "الفقه",       "file": "27-الفقه-نصوص-دليل-الطالب.md", "source": "دليل الطالب لنيل المطالب، مرعي بن يوسف الكرمي"},
     "hadith":  {"name": "الحديث",      "file": "12-الحديث-شرح-ابن-دقيق.md", "source": "الأربعون النووية بشرح ابن دقيق العيد"},
     "aqeedah": {"name": "العقيدة",     "file": "13-العقيدة-بريق-الجمان-الأصل.md", "source": "بريق الجمان بشرح أركان الإيمان"},
     "nahw":    {"name": "النحو",       "file": "14-النحو-التحفة-السنية.md",   "source": "التحفة السنية بشرح المقدمة الآجرومية، محمد محيي الدين عبدالحميد"},
@@ -125,7 +125,10 @@ def vetted(lst):
     for q in lst:
         if q.get("rej") or q.get("hide"): continue
         q=dict(q)
-        if not q.get("src"): q.pop("e", None)
+        src=q.pop("src", None)
+        if not src: q.pop("e", None)
+        elif q.get("e"): q["e"]=f"{q['e']} ({src})"
+        else: q["e"]=f"المصدر: {src}"
         out.append(q)
     return out
 

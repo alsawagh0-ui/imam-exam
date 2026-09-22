@@ -395,7 +395,7 @@ function basics(pane,sid,s,tr){
       host.innerHTML=`<div class="qcard"><div class="qn">تمرين · السؤال ${n+1} من ${qs.length}</div>
         <div class="qt">${esc(x.q)}</div>
         <div class="opts">${x.o.map((o,k)=>`<button class="opt ${x.pick<0?'':(k===x.c?'right':(k===x.pick?'wrong':''))}" data-k="${k}" ${x.pick<0?'':'disabled'}>${AR[k]}) ${esc(o)}${x.pick>=0&&k===x.c?' ✓':''}</button>`).join('')}</div>
-        ${x.pick>=0?`${x.e?`<div class="why"><b>الشرح:</b> ${esc(x.e)}</div>`:''}<div class="row" style="margin-top:12px"><button class="btn primary" id="nx">${n===qs.length-1?'النتيجة':'التالي'}</button></div>`:''}</div>`;
+        ${x.pick>=0?`${x.e?`<div class="why"><b>من نص الكتاب:</b> ${esc(x.e)}</div>`:''}<div class="row" style="margin-top:12px"><button class="btn primary" id="nx">${n===qs.length-1?'النتيجة':'التالي'}</button></div>`:''}</div>`;
       host.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{if(x.pick<0){x.pick=+b.dataset.k;step();}});
       const nx=host.querySelector('#nx'); if(nx) nx.onclick=()=>{n++;step();};
     }
@@ -484,7 +484,7 @@ function exam(tid){
       <div class="card notes"><div class="tbl"><table><tr><th>المادة</th><th>صحيح</th><th>من</th><th>الدرجة</th></tr>${rows.sort((a,b)=>b.w-a.w).map(x=>`<tr><td>${esc(DATA.subjects[x.s].name)}</td><td>${x.r.ok}</td><td>${x.r.n}</td><td>${x.got.toFixed(1)} / ${x.w.toFixed(0)}</td></tr>`).join('')}</table></div></div>
       <div class="row"><button class="btn primary" id="again">اختبار جديد بأسئلة أخرى</button><a class="btn" href="#/${tid}">العودة للمواد</a></div>
       <h2>مراجعة الأخطاء (${wrong.length})</h2>
-      ${wrong.length?wrong.map(q=>`<div class="qcard"><div class="qn">${esc(DATA.subjects[q.s].name)}</div><div class="qt" style="font-size:1.1rem">${esc(q.q)}</div><div class="opts">${q.o.map((o,k)=>`<div class="opt ${k===q.c?'right':(k===q.pick?'wrong':'')}">${esc(o)}${k===q.c?' ✓':(k===q.pick?' ✗':'')}</div>`).join('')}</div>${q.e?`<div class="why"><b>الشرح:</b> ${esc(q.e)}</div>`:''}</div>`).join(''):'<div class="empty">لا أخطاء. أحسنت.</div>'}
+      ${wrong.length?wrong.map(q=>`<div class="qcard"><div class="qn">${esc(DATA.subjects[q.s].name)}</div><div class="qt" style="font-size:1.1rem">${esc(q.q)}</div><div class="opts">${q.o.map((o,k)=>`<div class="opt ${k===q.c?'right':(k===q.pick?'wrong':'')}">${esc(o)}${k===q.c?' ✓':(k===q.pick?' ✗':'')}</div>`).join('')}</div>${q.e?`<div class="why"><b>من نص الكتاب:</b> ${esc(q.e)}</div>`:''}</div>`).join(''):'<div class="empty">لا أخطاء. أحسنت.</div>'}
     </div>`;
     app.querySelector('#again').onclick=()=>exam(tid);
     window.scrollTo(0,0);
@@ -565,7 +565,7 @@ function paper(tid){
               <button class="btn" data-self="0.5" data-gi="${gi}">ناقصة</button>
               <button class="btn no" data-self="0" data-gi="${gi}">خاطئة</button>
               ${it.self!=null?`<span class="badge ${it.self?'ok':'no'}">${it.self===1?'أخذت الدرجة':it.self===0.5?'نصف درجة':'بلا درجة'}</span>`:''}</div>`:'';
-          const why=(graded&&it.e)?`<div class="why"><b>الشرح:</b> ${esc(it.e)}</div>`:'';
+          const why=(graded&&it.e)?`<div class="why"><b>من نص الكتاب:</b> ${esc(it.e)}</div>`:'';
           return `<div class="qbox" id="q${gi}"><div class="qh"><span class="qno">س${n}</span><span class="qtx">${esc(it.q)}</span>${mk}</div>${body}${model}${why}</div>`;
         }).join('');
       }).join('');
@@ -645,7 +645,7 @@ function weak(tid){
       <div class="prog"><span>السؤال <b>${i+1}</b> من <b>${list.length}</b></span><span>أخطأت فيه <b>${q.m}</b> مرة</span></div>
       <div class="qcard"><div class="qn">${esc(DATA.subjects[q.s]?DATA.subjects[q.s].name:'')}</div>
         <div class="qt">${esc(q.q)}</div>
-        ${shown?`<div class="ans">${esc(q.a||'')}</div>${q.e?`<div class="why"><b>الشرح:</b> ${esc(q.e)}</div>`:''}`:''}
+        ${shown?`<div class="ans">${esc(q.a||'')}</div>${q.e?`<div class="why"><b>من نص الكتاب:</b> ${esc(q.e)}</div>`:''}`:''}
         <div class="row" style="margin-top:14px">
           ${shown?`<button class="btn ok" id="got">أتقنتها، احذفها</button><button class="btn no" id="keep">ما زلت أحتاجها</button>`:`<button class="btn primary" id="show">أظهر الإجابة</button>`}
           <button class="btn" id="next">تخطَّ</button>
