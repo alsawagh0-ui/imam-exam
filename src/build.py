@@ -73,6 +73,7 @@ BASICS = {
     "tajweed": "23-من-الصفر-التجويد.md",
     "tafsir": "24-من-الصفر-التفسير.md",
     "mithaq": "25-من-الصفر-ميثاق-المسجد.md",
+    "fiqh": "26-من-الصفر-الفقه.md",
 }
 
 questions = json.loads((ROOT / "questions.json").read_text(encoding="utf-8"))
