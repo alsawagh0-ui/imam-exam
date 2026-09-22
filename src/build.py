@@ -122,9 +122,10 @@ questions = json.loads((ROOT / "questions.json").read_text(encoding="utf-8"))
 mcq = json.loads((ROOT / "mcq.json").read_text(encoding="utf-8"))
 tf = json.loads((ROOT / "tf.json").read_text(encoding="utf-8"))
 fill = json.loads((ROOT / "fill.json").read_text(encoding="utf-8"))
+numbers = json.loads((ROOT / "numbers.json").read_text(encoding="utf-8"))
 plan = md("00-الخطة-وتحليل-الاختبارات.md")
 
-data = {"built": datetime.date.today().isoformat(), "plan": plan, "tracks": {}, "subjects": {}}
+data = {"built": datetime.date.today().isoformat(), "plan": plan, "numbers": numbers, "tracks": {}, "subjects": {}}
 for sid, s in SUBJECTS.items():
     data["subjects"][sid] = {
         "name": s["name"], "source": s["source"],

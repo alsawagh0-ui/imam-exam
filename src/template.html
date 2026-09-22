@@ -257,6 +257,7 @@ function track(tid){
     <a class="card exam-cta" href="#/${tid}/exam" style="text-decoration:none;color:inherit"><h2>اختبار تدريبي شامل</h2><span>${examCount(t)} سؤال اختيار من متعدد، تُسحب عشوائياً من بنك ${mcqTotal(t)} سؤال، بحسب توزيع الدرجات المعلن، والنتيجة من 100.${store.get('best:'+tid,null)!=null?' أفضل نتيجة لك: <b>'+store.get('best:'+tid)+'</b>':''}</span><span class="go" style="display:inline-block;background:var(--accent);color:var(--accent-ink);padding:8px 16px;border-radius:999px;font-weight:600;font-size:.9rem;justify-self:start">ابدأ الاختبار</span></a>
     <a class="card paper-cta" href="#/${tid}/paper" style="text-decoration:none;color:inherit"><h2>ورقة تدريب كاملة</h2><span>ورقة تدريبية على نمط ما يُتداول من نماذج سابقة: مجالات مرتبة، واختيار من متعدد، وصح وخطأ، وأكمل، وأسئلة مقالية. تُصحح آلياً مع تقييم ذاتي للمقالي، والنتيجة من 100.${store.get('bestPaper:'+tid,null)!=null?' أفضل نتيجة: <b>'+store.get('bestPaper:'+tid)+'</b>':''}</span><span class="go" style="display:inline-block;background:var(--accent);color:var(--accent-ink);padding:8px 16px;border-radius:999px;font-weight:600;font-size:.9rem;justify-self:start">ابدأ الورقة</span></a>
     ${(()=>{const w=rec.weak(tid);return w.length?`<a class="card" href="#/${tid}/weak" style="text-decoration:none;color:inherit"><h2>أخطائي (${w.length})</h2><span>الأسئلة التي أخطأت فيها محفوظة على جهازك مع شرحها. الاختبارات تعيدها عليك أكثر من غيرها حتى تتقنها.</span><span class="go" style="display:inline-block;background:var(--accent);color:var(--accent-ink);padding:8px 16px;border-radius:999px;font-weight:600;font-size:.9rem;justify-self:start">راجع أخطاءك</span></a>`:'';})()}
+    <a class="card" href="#/${tid}/numbers" style="text-decoration:none;color:inherit"><h2>ورقة الأرقام</h2><span>كل ما يُسأل عنه بالعدد في مقررك، في صفحة واحدة قابلة للطباعة: فروض الوضوء، أركان الصلاة، الأنصبة، المواقيت، المدود، كلمات الأذان. اقرأها قبل الاختبار.</span><span class="go" style="display:inline-block;background:var(--accent);color:var(--accent-ink);padding:8px 16px;border-radius:999px;font-weight:600;font-size:.9rem;justify-self:start">افتح الورقة</span></a>
     <h2>المواد حسب وزن الدرجات</h2>
     <div class="subjects">
       ${Object.entries(t.marks).map(([sid,m])=>{const s=DATA.subjects[sid];const d=done[sid]||{};const known=Object.values(d).filter(x=>x==='y').length;return `<a class="subj" href="#/${tid}/${sid}">
@@ -559,6 +560,25 @@ function paper(tid){
   render();
 }
 
+// ====== ورقة الأرقام: مراجعة أخيرة قبل الاختبار ======
+function numbers(tid){
+  const t=DATA.tracks[tid]; if(!t) return home();
+  crumbs.innerHTML=`<a href="#/">الرئيسية</a> › <a href="#/${tid}">${esc(t.name)}</a> › <span>ورقة الأرقام</span>`;
+  const subs=Object.keys(t.marks);
+  const rows=(DATA.numbers||[]).filter(r=>subs.includes(r.s)&&inScope(t,r.s,r));
+  const bySub={}; rows.forEach(r=>{(bySub[r.s]=bySub[r.s]||{})[r.g]=((bySub[r.s]||{})[r.g]||[]).concat([r]);});
+  app.innerHTML=`<section class="hero" style="padding-block:20px 10px"><h1>ورقة الأرقام</h1>
+    <p>كل ما يُسأل عنه بالعدد في مقرر ${esc(t.name)}، في صفحة واحدة. اقرأها قبل الاختبار، واطبعها واحملها معك.</p></section>
+  <div class="row" style="margin-bottom:12px"><button class="btn primary" id="prn">طباعة أو حفظ PDF</button><a class="btn" href="#/${tid}">العودة للمواد</a></div>
+  ${subs.filter(sid=>bySub[sid]).map(sid=>`<section class="sect"><h2>${esc(DATA.subjects[sid].name)} <span class="mk2">(${t.marks[sid]} درجة)</span></h2>
+    ${Object.entries(bySub[sid]).map(([g,list])=>`<div class="card notes" style="margin-bottom:10px"><h3>${esc(g)}</h3>
+      <div class="tbl"><table>${list.map(r=>`<tr><td style="width:38%"><b>${esc(r.k)}</b></td><td>${esc(r.v)}</td></tr>`).join('')}</table></div></div>`).join('')}
+  </section>`).join('')}
+  <p class="hint" style="margin-top:18px">هذه خلاصة للتذكير لا تُغني عن الدروس والملخصات.</p>`;
+  app.querySelector('#prn').onclick=()=>window.print();
+  window.scrollTo(0,0);
+}
+
 // ====== صفحة أخطائي: مراجعة مركّزة لما أخطأ فيه ======
 function weak(tid){
   const t=DATA.tracks[tid]; if(!t) return home();
@@ -603,6 +623,7 @@ function route(){
   if(h[1]==='exam') return exam(h[0]);
   if(h[1]==='paper') return paper(h[0]);
   if(h[1]==='weak') return weak(h[0]);
+  if(h[1]==='numbers') return numbers(h[0]);
   return subject(h[0],h[1]);
 }
 window.addEventListener('hashchange',route); route();
