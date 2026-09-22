@@ -118,10 +118,21 @@ BASICS = {
     "fiqh": "26-من-الصفر-الفقه.md",
 }
 
-questions = json.loads((ROOT / "questions.json").read_text(encoding="utf-8"))
-mcq = json.loads((ROOT / "mcq.json").read_text(encoding="utf-8"))
-tf = json.loads((ROOT / "tf.json").read_text(encoding="utf-8"))
-fill = json.loads((ROOT / "fill.json").read_text(encoding="utf-8"))
+def vetted(lst):
+    """لا يُعرض إلا ما طوبق بنص الكتاب: الشرح يُحذف ما لم يكن له مصدر (src)،
+    والسؤال يُستبعد إذا رُفض (rej) أو لم يثبت له أصل في الكتاب (hide)."""
+    out=[]
+    for q in lst:
+        if q.get("rej") or q.get("hide"): continue
+        q=dict(q)
+        if not q.get("src"): q.pop("e", None)
+        out.append(q)
+    return out
+
+questions = vetted(json.loads((ROOT / "questions.json").read_text(encoding="utf-8")))
+mcq = vetted(json.loads((ROOT / "mcq.json").read_text(encoding="utf-8")))
+tf = vetted(json.loads((ROOT / "tf.json").read_text(encoding="utf-8")))
+fill = vetted(json.loads((ROOT / "fill.json").read_text(encoding="utf-8")))
 numbers = json.loads((ROOT / "numbers.json").read_text(encoding="utf-8"))
 plan = md("00-الخطة-وتحليل-الاختبارات.md")
 
