@@ -72,6 +72,7 @@ BASICS = {
     "hadith": "22-من-الصفر-الحديث.md",
     "tajweed": "23-من-الصفر-التجويد.md",
     "tafsir": "24-من-الصفر-التفسير.md",
+    "mithaq": "25-من-الصفر-ميثاق-المسجد.md",
 }
 
 questions = json.loads((ROOT / "questions.json").read_text(encoding="utf-8"))
