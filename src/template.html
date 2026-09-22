@@ -138,6 +138,14 @@ h3{font-size:1.15rem}
 .badge.no{background:var(--gold-soft);color:var(--danger)}
 .sticky-sub{position:sticky;top:calc(env(safe-area-inset-top,0px) + 56px);z-index:4;background:var(--bg);padding-block:8px;border-bottom:1px solid var(--line)}
 footer{margin-top:40px;color:var(--muted);font-size:.8rem}
+.learn{border:2px solid var(--accent)}
+.learn-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.learn .lg{display:grid;gap:4px;padding:12px;border:1px solid var(--line);border-radius:12px;text-decoration:none;color:var(--ink);background:var(--bg)}
+.learn .lg:hover{border-color:var(--accent)}
+.learn .lg .n{font-weight:700;font-size:1.05rem}
+.learn .lg .c{font-size:.82rem;color:var(--muted)}
+.learn .lg .bar{height:5px;background:var(--line);border-radius:9px;overflow:hidden}
+.learn .lg .bar i{display:block;height:100%;background:var(--accent)}
 .why{margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--gold-soft);border:1px solid var(--line);font-size:.92rem;line-height:1.9}
 .why b{color:var(--accent)}
 @media print{
@@ -264,6 +272,12 @@ function track(tid){
   <div class="stack">
     <div class="card count"><span class="n">${left>=0?left:0}</span><span class="l">${left>=0?'يوماً على الاختبار التحريري':'انتهى موعد الاختبار'} (${fmtDate(t.exam_date)}) · درجة النجاح <b>${t.pass||70}</b> من 100</span></div>
     ${t.marks_pending?`<div class="card"><span class="pill gold">تنبيه</span> توزيع درجات هذا المسار لم يصل بعد. المواد أدناه حسب نموذج اختبار المؤذنين السابق، والمحتوى مشترك مع مسار الإمام لأن المقرر واحد.</div>`:''}
+    ${(()=>{const dn=store.get('lesson',{});const subs=Object.keys(t.marks).filter(sid=>(DATA.subjects[sid].lessons||[]).length);
+      if(!subs.length) return '';
+      return `<div class="card learn"><h2>ابدأ من هنا: تعلّم من الصفر</h2>
+        <p style="margin:4px 0 12px;color:var(--muted)">دروس بلغة سهلة لمن لم يدرس المادة، <b>وبعد كل درس تمرين عليه</b> مع شرح كل إجابة. أتقن الدروس أولاً، ثم انتقل إلى الاختبار والأوراق.</p>
+        <div class="learn-grid">${subs.map(sid=>{const L=DATA.subjects[sid].lessons.filter(x=>x.q.length);const ok=L.filter((x,i)=>(dn[sid+':'+DATA.subjects[sid].lessons.indexOf(x)]||0)>=80).length;
+          return `<a class="lg" href="#/${tid}/${sid}/basics"><span class="n">${esc(DATA.subjects[sid].name)}</span><span class="c">${DATA.subjects[sid].lessons.filter(x=>x.t&&x.t.startsWith('درس')).length} درساً · ${L.length} تمريناً</span><span class="bar"><i style="width:${L.length?Math.round(100*ok/L.length):0}%"></i></span><span class="c">${ok?`أتقنت ${ok} من ${L.length}`:'لم تبدأ بعد'}</span></a>`;}).join('')}</div></div>`;})()}
     <a class="card exam-cta" href="#/${tid}/exam" style="text-decoration:none;color:inherit"><h2>اختبار تدريبي شامل</h2><span>${examCount(t)} سؤال اختيار من متعدد، تُسحب عشوائياً من بنك ${mcqTotal(t)} سؤال، بحسب توزيع الدرجات المعلن، والنتيجة من 100.${store.get('best:'+tid,null)!=null?' أفضل نتيجة لك: <b>'+store.get('best:'+tid)+'</b>':''}</span><span class="go" style="display:inline-block;background:var(--accent);color:var(--accent-ink);padding:8px 16px;border-radius:999px;font-weight:600;font-size:.9rem;justify-self:start">ابدأ الاختبار</span></a>
     <a class="card paper-cta" href="#/${tid}/paper" style="text-decoration:none;color:inherit"><h2>ورقة تدريب كاملة</h2><span>ورقة تدريبية على نمط ما يُتداول من نماذج سابقة: مجالات مرتبة، واختيار من متعدد، وصح وخطأ، وأكمل، وأسئلة مقالية. تُصحح آلياً مع تقييم ذاتي للمقالي، والنتيجة من 100.${store.get('bestPaper:'+tid,null)!=null?' أفضل نتيجة: <b>'+store.get('bestPaper:'+tid)+'</b>':''}</span><span class="go" style="display:inline-block;background:var(--accent);color:var(--accent-ink);padding:8px 16px;border-radius:999px;font-weight:600;font-size:.9rem;justify-self:start">ابدأ الورقة</span></a>
     ${(()=>{const w=rec.weak(tid);return w.length?`<a class="card" href="#/${tid}/weak" style="text-decoration:none;color:inherit"><h2>أخطائي (${w.length})</h2><span>الأسئلة التي أخطأت فيها محفوظة على جهازك مع شرحها. الاختبارات تعيدها عليك أكثر من غيرها حتى تتقنها.</span><span class="go" style="display:inline-block;background:var(--accent);color:var(--accent-ink);padding:8px 16px;border-radius:999px;font-weight:600;font-size:.9rem;justify-self:start">راجع أخطاءك</span></a>`:'';})()}
@@ -284,7 +298,7 @@ function track(tid){
 function subject(tid,sid,mode){
   const t=DATA.tracks[tid], s=DATA.subjects[sid]; if(!t||!s) return home();
   const hasBasics=!!(s.lessons&&s.lessons.length);
-  mode = mode||store.get('mode:'+sid, hasBasics?'basics':'notes');
+  mode = mode||store.get('tab:'+sid, hasBasics?'basics':'notes');
   if(mode==='basics'&&!hasBasics) mode='notes';
   crumbs.innerHTML=`<a href="#/">الرئيسية</a> › <a href="#/${tid}">${esc(t.name)}</a> › <span>${esc(s.name)}</span>`;
   const m=t.marks[sid];
@@ -295,7 +309,7 @@ function subject(tid,sid,mode){
     <button role="tab" id="tab-quiz" aria-selected="${mode==='quiz'}" data-mode="quiz">اختبر نفسك (${s.questions.length||(s.mcq||[]).length})</button>
   </div>
   <div id="pane"></div>`;
-  app.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{store.set('mode:'+sid,b.dataset.mode);subject(tid,sid,b.dataset.mode);});
+  app.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{store.set('tab:'+sid,b.dataset.mode);location.hash='#/'+tid+'/'+sid+'/'+b.dataset.mode;});
   const pane=document.getElementById('pane');
   if(mode==='basics'){basics(pane,sid,s,t);}
   else if(mode==='notes'){pane.innerHTML=`<div class="row" style="margin-bottom:10px"><button class="btn" id="prn">طباعة الملخص أو حفظه PDF</button></div><div class="card notes">${mdToHtml(s.notes)}</div>`;pane.querySelector('#prn').onclick=()=>window.print();}
@@ -634,7 +648,7 @@ function route(){
   if(h[1]==='paper') return paper(h[0]);
   if(h[1]==='weak') return weak(h[0]);
   if(h[1]==='numbers') return numbers(h[0]);
-  return subject(h[0],h[1]);
+  return subject(h[0],h[1],h[2]);
 }
 window.addEventListener('hashchange',route); route();
 </script>
