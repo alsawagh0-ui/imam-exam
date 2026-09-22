@@ -272,7 +272,7 @@ function track(tid){
 
 function subject(tid,sid,mode){
   const t=DATA.tracks[tid], s=DATA.subjects[sid]; if(!t||!s) return home();
-  const hasBasics=!!(s.basics&&s.basics.trim());
+  const hasBasics=!!(s.lessons&&s.lessons.length);
   mode = mode||store.get('mode:'+sid, hasBasics?'basics':'notes');
   if(mode==='basics'&&!hasBasics) mode='notes';
   crumbs.innerHTML=`<a href="#/">الرئيسية</a> › <a href="#/${tid}">${esc(t.name)}</a> › <span>${esc(s.name)}</span>`;
@@ -286,9 +286,74 @@ function subject(tid,sid,mode){
   <div id="pane"></div>`;
   app.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{store.set('mode:'+sid,b.dataset.mode);subject(tid,sid,b.dataset.mode);});
   const pane=document.getElementById('pane');
-  if(mode==='basics'){pane.innerHTML=`<div class="card" style="margin-bottom:12px"><span class="pill gold">ابدأ هنا</span> هذه الدروس لمن لم يدرس المادة من قبل: لغة سهلة وأمثلة، لا تحتاج قبلها شيئاً. وبعد أن تفهمها انتقل إلى <b>الملخص</b> ثم <b>اختبر نفسك</b>.</div><div class="row" style="margin-bottom:10px"><button class="btn" id="prn">طباعة الدروس أو حفظها PDF</button></div><div class="card notes">${mdToHtml(s.basics)}</div>`;pane.querySelector('#prn').onclick=()=>window.print();}
+  if(mode==='basics'){basics(pane,sid,s,t);}
   else if(mode==='notes'){pane.innerHTML=`<div class="row" style="margin-bottom:10px"><button class="btn" id="prn">طباعة الملخص أو حفظه PDF</button></div><div class="card notes">${mdToHtml(s.notes)}</div>`;pane.querySelector('#prn').onclick=()=>window.print();}
   else quiz(pane,sid,s,t);
+}
+
+// ====== تبويب "من الصفر": دروس متسلسلة مع تمرين بعد كل درس ======
+function basics(pane,sid,s,tr){
+  const Ls=s.lessons||[]; const done=store.get('lesson',{}); const key=i=>sid+':'+i;
+  const AR=['أ','ب','ج','د'];
+  const total=Ls.filter(L=>L.q.length).length;
+  const passed=Ls.filter((L,i)=>L.q.length&&(done[key(i)]||0)>=80).length;
+  function render(openIdx){
+    pane.innerHTML=`<div class="card" style="margin-bottom:12px"><span class="pill gold">ابدأ هنا</span> دروس لمن لم يدرس المادة من قبل: لغة سهلة وأمثلة. بعد كل درس <b>تمرين عليه وحده</b>، فلا تنتقل حتى تتقنه. وإذا أتممتها انتقل إلى <b>الملخص</b> ثم <b>اختبر نفسك</b>.
+      ${total?`<div class="pbar" style="margin-top:10px"><i style="width:${Math.round(100*passed/total)}%"></i></div><div class="hint" style="margin-top:6px">أتقنت <b>${passed}</b> من <b>${total}</b> درساً</div>`:''}</div>
+    <div class="row" style="margin-bottom:10px"><button class="btn" id="prn">طباعة الدروس أو حفظها PDF</button></div>
+    ${Ls.map((L,i)=>{
+      const sc=done[key(i)]; const ok=(sc||0)>=80;
+      return `<div class="card notes" id="L${i}" style="margin-bottom:14px">
+        ${L.t?`<h2>${esc(L.t)} ${L.q.length?(ok?'<span class="badge ok">أتقنته</span>':(sc!=null?`<span class="badge no">${sc}%</span>`:'')):''}</h2>`:''}
+        ${mdToHtml(L.md)}
+        ${L.q.length?`<div class="row" style="margin-top:12px"><button class="btn ${openIdx===i?'':'primary'}" data-lesson="${i}">${openIdx===i?'إخفاء التمرين':`تمرين على هذا الدرس (${L.q.length})`}</button></div><div id="qz${i}"></div>`:''}
+      </div>`;}).join('')}`;
+    pane.querySelector('#prn').onclick=()=>window.print();
+    pane.querySelectorAll('[data-lesson]').forEach(b=>b.onclick=()=>{
+      const i=+b.dataset.lesson;
+      if(openIdx===i){render(-1);return;}
+      render(i); runQuiz(i); document.getElementById('L'+i).scrollIntoView({behavior:'smooth',block:'start'});
+    });
+    if(openIdx>=0) runQuiz(openIdx);
+  }
+  function runQuiz(i){
+    const host=document.getElementById('qz'+i); if(!host) return;
+    const pool=Ls[i].q.map(k=>(s.mcq||[])[k]).filter(q=>q&&inScope(tr,sid,q));
+    if(!pool.length){host.innerHTML='<div class="empty">لا أسئلة لهذا الدرس في مقررك.</div>';return;}
+    const qs=shuffle([...pool]).map(q=>{const ix=shuffle(q.o.map((_,k)=>k));return {q:q.q,o:ix.map(k=>q.o[k]),c:ix.indexOf(q.c),e:q.e||'',pick:-1};});
+    let n=0;
+    function step(){
+      if(n>=qs.length){
+        const ok=qs.filter(x=>x.pick===x.c).length; const pct=Math.round(100*ok/qs.length);
+        done[key(i)]=Math.max(done[key(i)]||0,pct); store.set('lesson',done);
+        qs.forEach(x=>rec.mark(qid(x.q), x.pick===x.c, {s:sid,q:x.q,a:x.o[x.c],e:x.e}));
+        host.innerHTML=`<div class="qcard"><div class="score" style="font-size:2rem">${pct}<small>%</small></div>
+          <div style="color:var(--muted);margin:6px 0">${ok} من ${qs.length} صحيحة. ${pct>=80?'أتقنت الدرس، انتقل إلى الذي بعده.':'راجع الدرس ثم أعد التمرين.'}</div>
+          <div class="row"><button class="btn primary" id="again">أعد التمرين</button></div></div>`;
+        host.querySelector('#again').onclick=()=>runQuiz(i);
+        // حدّث شارة الدرس وشريط التقدم في مكانهما دون إعادة بناء الصفحة
+        const head=document.querySelector('#L'+i+' h2');
+        if(head){
+          const b=head.querySelector('.badge')||head.appendChild(document.createElement('span'));
+          b.className='badge '+(done[key(i)]>=80?'ok':'no');
+          b.textContent=done[key(i)]>=80?'أتقنته':done[key(i)]+'%';
+        }
+        const np=Ls.filter((L,k)=>L.q.length&&(done[key(k)]||0)>=80).length;
+        const bar=pane.querySelector('.pbar i'); if(bar&&total) bar.style.width=Math.round(100*np/total)+'%';
+        const hint=pane.querySelector('.card .hint'); if(hint) hint.innerHTML='أتقنت <b>'+np+'</b> من <b>'+total+'</b> درساً';
+        return;
+      }
+      const x=qs[n];
+      host.innerHTML=`<div class="qcard"><div class="qn">تمرين · السؤال ${n+1} من ${qs.length}</div>
+        <div class="qt">${esc(x.q)}</div>
+        <div class="opts">${x.o.map((o,k)=>`<button class="opt ${x.pick<0?'':(k===x.c?'right':(k===x.pick?'wrong':''))}" data-k="${k}" ${x.pick<0?'':'disabled'}>${AR[k]}) ${esc(o)}${x.pick>=0&&k===x.c?' ✓':''}</button>`).join('')}</div>
+        ${x.pick>=0?`${x.e?`<div class="why"><b>الشرح:</b> ${esc(x.e)}</div>`:''}<div class="row" style="margin-top:12px"><button class="btn primary" id="nx">${n===qs.length-1?'النتيجة':'التالي'}</button></div>`:''}</div>`;
+      host.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{if(x.pick<0){x.pick=+b.dataset.k;step();}});
+      const nx=host.querySelector('#nx'); if(nx) nx.onclick=()=>{n++;step();};
+    }
+    step();
+  }
+  render(-1);
 }
 
 function quiz(pane,sid,s,tr){

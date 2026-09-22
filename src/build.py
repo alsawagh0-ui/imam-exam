@@ -13,6 +13,48 @@ OUT = ROOT.parent / "website" / "exam" / "index.html"
 def md(name):
     return (ROOT / name).read_text(encoding="utf-8")
 
+
+# ---------- تقسيم دروس "من الصفر" وربط كل درس بأسئلته ----------
+import re, unicodedata
+
+_DIAC = re.compile(r"[\u064B-\u0652\u0640]")
+def norm(t):
+    t = unicodedata.normalize("NFKC", t)
+    t = _DIAC.sub("", t)
+    for a, b in (("أ","ا"),("إ","ا"),("آ","ا"),("ة","ه"),("ى","ي"),("ؤ","و"),("ئ","ي")):
+        t = t.replace(a, b)
+    return t
+
+def split_lessons(md_text, pool):
+    """يقسم ملف الدروس على العناوين، ويلتقط سطر ::quiz:: ليختار أسئلة الدرس من بنك المادة."""
+    lessons, cur = [], None
+    for line in md_text.split("\n"):
+        if line.startswith("## "):
+            if cur: lessons.append(cur)
+            cur = {"t": line[3:].strip(), "md": [], "kw": []}
+            continue
+        if cur is None:
+            cur = {"t": "", "md": [], "kw": []}
+        if line.startswith("::quiz::"):
+            cur["kw"] = [k.strip() for k in line[len("::quiz::"):].split("|") if k.strip()]
+            continue
+        cur["md"].append(line)
+    if cur: lessons.append(cur)
+
+    out, used = [], set()
+    for L in lessons:
+        idxs = []
+        if L["kw"]:
+            kws = [norm(k) for k in L["kw"]]
+            for i, q in enumerate(pool):
+                if i in used: continue
+                hay = norm(q["q"] + " " + q["o"][q["c"]] + " " + q.get("e", ""))
+                if any(k in hay for k in kws):
+                    idxs.append(i); used.add(i)
+                if len(idxs) >= 12: break
+        out.append({"t": L["t"], "md": "\n".join(L["md"]).strip(), "q": idxs})
+    return [L for L in out if L["md"] or L["q"]]
+
 SUBJECTS = {
     "fiqh":    {"name": "الفقه",       "file": "01-الفقه-مفيد-الصاحب.md",      "source": "دليل الطالب لنيل المطالب (المصدر المعتمد) + مختصراته"},
     "hadith":  {"name": "الحديث",      "file": "12-الحديث-شرح-ابن-دقيق.md", "source": "الأربعون النووية بشرح ابن دقيق العيد"},
@@ -87,7 +129,8 @@ for sid, s in SUBJECTS.items():
     data["subjects"][sid] = {
         "name": s["name"], "source": s["source"],
         "notes": ((md("07-دليل-الطالب-العبادات.md") + "\n\n" + md("10-المعاملات-الكوكب-الغارب.md") + "\n\n" + md("11-الجنايات-والحدود.md") + "\n\n" if sid=="fiqh" else "") + md(s["file"]) + ("\n\n" + md("01b-الفقه-إضافات-من-دليل-الطالب.md") if sid=="fiqh" else ("\n\n" + md("08-غاية-المريد-التجويد.md") if sid=="tajweed" else ("\n\n" + md("02-الحديث-الأربعون-النووية.md") if sid=="hadith" else ("\n\n" + md("03-العقيدة-بريق-الجمان.md") if sid=="aqeedah" else ("\n\n" + md("06-النحو-مراجعة.md") if sid=="nahw" else "")))))) if s["file"] else "## المقرر لم يُرسل بعد\n\nأرسل صور أو ملف ميثاق المسجد ليُضاف هنا.",
-        "basics": (ROOT / BASICS[sid]).read_text(encoding="utf-8") if sid in BASICS else "",
+        "lessons": split_lessons((ROOT / BASICS[sid]).read_text(encoding="utf-8"),
+                                 [q for q in mcq if q["s"] == sid]) if sid in BASICS else [],
         "questions": [q for q in questions if q["s"] == sid],
         "mcq": [q for q in mcq if q["s"] == sid],
         "tf": [q for q in tf if q["s"] == sid],
