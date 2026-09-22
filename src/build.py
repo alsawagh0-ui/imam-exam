@@ -65,6 +65,11 @@ TRACKS = {
     },
 }
 
+# دروس "من الصفر": مكتوبة للمبتدئ الذي لم يدرس المادة قط
+BASICS = {
+    "nahw": "20-من-الصفر-النحو.md",
+}
+
 questions = json.loads((ROOT / "questions.json").read_text(encoding="utf-8"))
 mcq = json.loads((ROOT / "mcq.json").read_text(encoding="utf-8"))
 tf = json.loads((ROOT / "tf.json").read_text(encoding="utf-8"))
@@ -76,6 +81,7 @@ for sid, s in SUBJECTS.items():
     data["subjects"][sid] = {
         "name": s["name"], "source": s["source"],
         "notes": ((md("07-دليل-الطالب-العبادات.md") + "\n\n" + md("10-المعاملات-الكوكب-الغارب.md") + "\n\n" + md("11-الجنايات-والحدود.md") + "\n\n" if sid=="fiqh" else "") + md(s["file"]) + ("\n\n" + md("01b-الفقه-إضافات-من-دليل-الطالب.md") if sid=="fiqh" else ("\n\n" + md("08-غاية-المريد-التجويد.md") if sid=="tajweed" else ("\n\n" + md("02-الحديث-الأربعون-النووية.md") if sid=="hadith" else ("\n\n" + md("03-العقيدة-بريق-الجمان.md") if sid=="aqeedah" else ("\n\n" + md("06-النحو-مراجعة.md") if sid=="nahw" else "")))))) if s["file"] else "## المقرر لم يُرسل بعد\n\nأرسل صور أو ملف ميثاق المسجد ليُضاف هنا.",
+        "basics": (ROOT / BASICS[sid]).read_text(encoding="utf-8") if sid in BASICS else "",
         "questions": [q for q in questions if q["s"] == sid],
         "mcq": [q for q in mcq if q["s"] == sid],
         "tf": [q for q in tf if q["s"] == sid],

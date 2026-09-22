@@ -272,18 +272,22 @@ function track(tid){
 
 function subject(tid,sid,mode){
   const t=DATA.tracks[tid], s=DATA.subjects[sid]; if(!t||!s) return home();
-  mode = mode||store.get('mode:'+sid,'notes');
+  const hasBasics=!!(s.basics&&s.basics.trim());
+  mode = mode||store.get('mode:'+sid, hasBasics?'basics':'notes');
+  if(mode==='basics'&&!hasBasics) mode='notes';
   crumbs.innerHTML=`<a href="#/">الرئيسية</a> › <a href="#/${tid}">${esc(t.name)}</a> › <span>${esc(s.name)}</span>`;
   const m=t.marks[sid];
   app.innerHTML=`<section class="hero"><h1>${esc(s.name)} <span class="pill gold">${m==null?'الدرجة غير محددة':m+' درجة'}</span></h1><p>${esc(s.source)}${t.notes[sid]?' · '+esc(t.notes[sid]):''}</p></section>
   <div class="tabs" role="tablist">
+    ${hasBasics?`<button role="tab" id="tab-basics" aria-selected="${mode==='basics'}" data-mode="basics">من الصفر</button>`:''}
     <button role="tab" id="tab-notes" aria-selected="${mode==='notes'}" data-mode="notes">الملخص</button>
     <button role="tab" id="tab-quiz" aria-selected="${mode==='quiz'}" data-mode="quiz">اختبر نفسك (${s.questions.length||(s.mcq||[]).length})</button>
   </div>
   <div id="pane"></div>`;
   app.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{store.set('mode:'+sid,b.dataset.mode);subject(tid,sid,b.dataset.mode);});
   const pane=document.getElementById('pane');
-  if(mode==='notes'){pane.innerHTML=`<div class="row" style="margin-bottom:10px"><button class="btn" id="prn">طباعة الملخص أو حفظه PDF</button></div><div class="card notes">${mdToHtml(s.notes)}</div>`;pane.querySelector('#prn').onclick=()=>window.print();}
+  if(mode==='basics'){pane.innerHTML=`<div class="card" style="margin-bottom:12px"><span class="pill gold">ابدأ هنا</span> هذه الدروس لمن لم يدرس المادة من قبل: لغة سهلة وأمثلة، لا تحتاج قبلها شيئاً. وبعد أن تفهمها انتقل إلى <b>الملخص</b> ثم <b>اختبر نفسك</b>.</div><div class="row" style="margin-bottom:10px"><button class="btn" id="prn">طباعة الدروس أو حفظها PDF</button></div><div class="card notes">${mdToHtml(s.basics)}</div>`;pane.querySelector('#prn').onclick=()=>window.print();}
+  else if(mode==='notes'){pane.innerHTML=`<div class="row" style="margin-bottom:10px"><button class="btn" id="prn">طباعة الملخص أو حفظه PDF</button></div><div class="card notes">${mdToHtml(s.notes)}</div>`;pane.querySelector('#prn').onclick=()=>window.print();}
   else quiz(pane,sid,s,t);
 }
 
