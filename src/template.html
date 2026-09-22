@@ -3,6 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="منصة تدريب ذاتي غير رسمية للمتقدمين لاختبار الأئمة والمؤذنين: دروس من الصفر، وبنك تمارين مع شرح لكل إجابة، وأوراق تدريب تُصحَّح آلياً.">
+<meta name="theme-color" content="#0f5132">
+<meta property="og:type" content="website">
+<meta property="og:title" content="تدريبات الأئمة والمؤذنين">
+<meta property="og:description" content="دروس من الصفر، وبنك تمارين مع شرح لكل إجابة، وأوراق تدريب كاملة تُصحَّح آلياً، ويحفظ لك أخطاءك. مجاني وبلا تسجيل.">
+<meta property="og:locale" content="ar_KW">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230f5132'/%3E%3Ctext x='32' y='44' font-size='34' text-anchor='middle' fill='%23f6f1e7' font-family='serif'%3E%D9%85%3C/text%3E%3C/svg%3E">
 <title>تدريبات الأئمة والمؤذنين</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;600;700&display=swap">
 <style>
@@ -46,8 +54,8 @@ h3{font-size:1.15rem}
 .choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:24px}
 .choice{display:block;text-decoration:none;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:22px 20px;transition:transform .15s,border-color .15s}
 .choice:hover{transform:translateY(-2px);border-color:var(--accent)}
-.choice .k{font-family:var(--display);font-size:1.7rem;font-weight:700}
-.choice .d{color:var(--muted);font-size:.92rem;margin-top:4px}
+.choice .k{display:block;font-family:var(--display);font-size:1.7rem;font-weight:700}
+.choice .d{display:block;color:var(--muted);font-size:.92rem;margin-top:4px}
 .choice .go{display:inline-block;margin-top:14px;background:var(--accent);color:var(--accent-ink);padding:8px 16px;border-radius:999px;font-weight:600;font-size:.9rem}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px 18px}
 .stack{display:grid;gap:14px}
@@ -230,6 +238,8 @@ function weightedPick(pool,n){
 }
 
 // ---------- الصفحات ----------
+function mark(n){n=+n; if(n===1) return 'درجة واحدة'; if(n===2) return 'درجتان';
+  if(n>=3&&n<=10) return n+' درجات'; return n+' درجة';}
 function daysLeft(iso){const d=new Date(iso+'T00:00:00');const now=new Date();now.setHours(0,0,0,0);return Math.round((d-now)/86400000);}
 
 function home(){
@@ -262,7 +272,7 @@ function track(tid){
     <div class="subjects">
       ${Object.entries(t.marks).map(([sid,m])=>{const s=DATA.subjects[sid];const d=done[sid]||{};const known=Object.values(d).filter(x=>x==='y').length;return `<a class="subj" href="#/${tid}/${sid}">
         <span class="nm">${esc(s.name)}</span>
-        <span class="mk"><b>${m==null?'؟':m}</b><span>${m==null?'درجة':'درجة'}</span></span>
+        <span class="mk"><b>${m==null?'؟':m}</b><span>${(m>=3&&m<=10)?'درجات':'درجة'}</span></span>
         <span class="src">${esc(s.source)}${t.notes[sid]?' · '+esc(t.notes[sid]):''} · ${s.questions.length||poolMcq(t,sid).length} سؤال${known?` · أتقنت ${known}`:''}</span>
         ${m!=null?`<span class="bar"><i style="width:${Math.round(100*m/total)}%"></i></span>`:''}
       </a>`;}).join('')}
@@ -522,7 +532,7 @@ function paper(tid){
           return `<div class="qbox" id="q${gi}"><div class="qh"><span class="qno">س${n}</span><span class="qtx">${esc(it.q)}</span>${mk}</div>${body}${model}${why}</div>`;
         }).join('');
       }).join('');
-      return `<section class="sect"><h2>المجال ${['الأول','الثاني','الثالث','الرابع','الخامس','السادس','السابع'][si]}: ${esc(sc.name)} <span class="mk2">(${sc.w.toFixed(0)} درجة)</span></h2>${inner}</section>`;
+      return `<section class="sect"><h2>المجال ${['الأول','الثاني','الثالث','الرابع','الخامس','السادس','السابع'][si]}: ${esc(sc.name)} <span class="mk2">(${mark(sc.w.toFixed(0))})</span></h2>${inner}</section>`;
     }).join('');
     const sc=graded?scoreNow():null;
     app.innerHTML=`<section class="hero" style="padding-block:18px 8px"><h1>ورقة تدريب ${esc(t.name)}</h1>
@@ -570,7 +580,7 @@ function numbers(tid){
   app.innerHTML=`<section class="hero" style="padding-block:20px 10px"><h1>ورقة الأرقام</h1>
     <p>كل ما يُسأل عنه بالعدد في مقرر ${esc(t.name)}، في صفحة واحدة. اقرأها قبل الاختبار، واطبعها واحملها معك.</p></section>
   <div class="row" style="margin-bottom:12px"><button class="btn primary" id="prn">طباعة أو حفظ PDF</button><a class="btn" href="#/${tid}">العودة للمواد</a></div>
-  ${subs.filter(sid=>bySub[sid]).map(sid=>`<section class="sect"><h2>${esc(DATA.subjects[sid].name)} <span class="mk2">(${t.marks[sid]} درجة)</span></h2>
+  ${subs.filter(sid=>bySub[sid]).map(sid=>`<section class="sect"><h2>${esc(DATA.subjects[sid].name)} <span class="mk2">(${mark(t.marks[sid])})</span></h2>
     ${Object.entries(bySub[sid]).map(([g,list])=>`<div class="card notes" style="margin-bottom:10px"><h3>${esc(g)}</h3>
       <div class="tbl"><table>${list.map(r=>`<tr><td style="width:38%"><b>${esc(r.k)}</b></td><td>${esc(r.v)}</td></tr>`).join('')}</table></div></div>`).join('')}
   </section>`).join('')}
