@@ -396,9 +396,9 @@ function buildPaper(t){
   order.forEach(sid=>{
     const conf=t.paper[sid], sub=DATA.subjects[sid], items=[];
     weightedPick(poolMcq(t,sid),conf.mcq||0).forEach(q=>{const idx=shuffle(q.o.map((_,i)=>i));items.push({k:'mcq',s:sid,q:q.q,o:idx.map(i=>q.o[i]),c:idx.indexOf(q.c),e:q.e||'',pick:-1});});
-    weightedPick(sub.tf||[],conf.tf||0).forEach(q=>items.push({k:'tf',s:sid,q:q.q,t:q.t,e:q.e||'',pick:null}));
-    weightedPick(sub.fill||[],conf.fill||0).forEach(q=>items.push({k:'fill',s:sid,q:q.q,a:q.a,e:q.e||'',val:'',self:null}));
-    weightedPick(sub.questions||[],conf.written||0).forEach(q=>items.push({k:'written',s:sid,q:q.q,a:q.a,e:q.e||'',val:'',self:null}));
+    weightedPick((sub.tf||[]).filter(q=>inScope(t,sid,q)),conf.tf||0).forEach(q=>items.push({k:'tf',s:sid,q:q.q,t:q.t,e:q.e||'',pick:null}));
+    weightedPick((sub.fill||[]).filter(q=>inScope(t,sid,q)),conf.fill||0).forEach(q=>items.push({k:'fill',s:sid,q:q.q,a:q.a,e:q.e||'',val:'',self:null}));
+    weightedPick((sub.questions||[]).filter(q=>inScope(t,sid,q)),conf.written||0).forEach(q=>items.push({k:'written',s:sid,q:q.q,a:q.a,e:q.e||'',val:'',self:null}));
     if(items.length) secs.push({sid,name:sub.name,items});
   });
   // توزيع الدرجات: درجة المادة تُقسم على عدد أسئلتها
