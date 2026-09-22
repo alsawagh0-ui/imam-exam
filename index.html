@@ -139,10 +139,19 @@ h3{font-size:1.15rem}
 .sticky-sub{position:sticky;top:calc(env(safe-area-inset-top,0px) + 56px);z-index:4;background:var(--bg);padding-block:8px;border-bottom:1px solid var(--line)}
 footer{margin-top:40px;color:var(--muted);font-size:.8rem}
 .learn{border:2px solid var(--accent)}
+.toc{margin-bottom:12px}
+.toc .ti{display:flex;align-items:center;gap:8px;padding:10px 4px;border-top:1px solid var(--line);text-decoration:none;color:var(--ink)}
+.toc .ti:first-of-type{border-top:0}
+.toc .tt{flex:1;font-weight:600}
+.toc .c{font-size:.8rem;color:var(--muted)}
+.toc .go2{background:var(--accent);color:var(--accent-ink);padding:5px 12px;border-radius:999px;font-size:.82rem;font-weight:700;white-space:nowrap}
 .learn-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
-.learn .lg{display:grid;gap:4px;padding:12px;border:1px solid var(--line);border-radius:12px;text-decoration:none;color:var(--ink);background:var(--bg)}
-.learn .lg:hover{border-color:var(--accent)}
-.learn .lg .n{font-weight:700;font-size:1.05rem}
+.learn .lg{display:grid;gap:8px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;text-decoration:none;color:var(--ink);background:var(--bg);cursor:pointer}
+.learn .lg:hover,.learn .lg:active{border-color:var(--accent)}
+.learn .lg .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.learn .lg .row2{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.learn .lg .cta{background:var(--accent);color:var(--accent-ink);padding:7px 14px;border-radius:999px;font-weight:700;font-size:.88rem;white-space:nowrap}
+.learn .lg .n{font-weight:700;font-size:1.1rem}
 .learn .lg .c{font-size:.82rem;color:var(--muted)}
 .learn .lg .bar{height:5px;background:var(--line);border-radius:9px;overflow:hidden}
 .learn .lg .bar i{display:block;height:100%;background:var(--accent)}
@@ -275,9 +284,15 @@ function track(tid){
     ${(()=>{const dn=store.get('lesson',{});const subs=Object.keys(t.marks).filter(sid=>(DATA.subjects[sid].lessons||[]).length);
       if(!subs.length) return '';
       return `<div class="card learn"><h2>ابدأ من هنا: تعلّم من الصفر</h2>
-        <p style="margin:4px 0 12px;color:var(--muted)">دروس بلغة سهلة لمن لم يدرس المادة، <b>وبعد كل درس تمرين عليه</b> مع شرح كل إجابة. أتقن الدروس أولاً، ثم انتقل إلى الاختبار والأوراق.</p>
+        <p style="margin:4px 0 12px;color:var(--muted)">دروس بلغة سهلة لمن لم يدرس المادة، <b>وبعد كل درس تمرين عليه</b> مع شرح كل إجابة.</p>
+        <p style="margin:0 0 12px"><b>اضغط على أي مادة لتبدأ دروسها وتمارينها 👇</b></p>
         <div class="learn-grid">${subs.map(sid=>{const L=DATA.subjects[sid].lessons.filter(x=>x.q.length);const ok=L.filter((x,i)=>(dn[sid+':'+DATA.subjects[sid].lessons.indexOf(x)]||0)>=80).length;
-          return `<a class="lg" href="#/${tid}/${sid}/basics"><span class="n">${esc(DATA.subjects[sid].name)}</span><span class="c">${DATA.subjects[sid].lessons.filter(x=>x.t&&x.t.startsWith('درس')).length} درساً · ${L.length} تمريناً</span><span class="bar"><i style="width:${L.length?Math.round(100*ok/L.length):0}%"></i></span><span class="c">${ok?`أتقنت ${ok} من ${L.length}`:'لم تبدأ بعد'}</span></a>`;}).join('')}</div></div>`;})()}
+          const started=Object.keys(dn).some(k=>k.startsWith(sid+':'));
+          return `<a class="lg" href="#/${tid}/${sid}/basics">
+            <span class="top"><span class="n">${esc(DATA.subjects[sid].name)}</span><span class="c">${DATA.subjects[sid].lessons.filter(x=>x.t&&x.t.startsWith('درس')).length} درساً · ${L.length} تمريناً</span></span>
+            <span class="bar"><i style="width:${L.length?Math.round(100*ok/L.length):0}%"></i></span>
+            <span class="row2"><span class="c">${ok?`أتقنت ${ok} من ${L.length}`:(started?'بدأت':'لم تبدأ بعد')}</span><span class="cta">${started?'أكمل التدريب':'ابدأ التدريب'} ←</span></span>
+          </a>`;}).join('')}</div></div>`;})()}
     <a class="card exam-cta" href="#/${tid}/exam" style="text-decoration:none;color:inherit"><h2>اختبار تدريبي شامل</h2><span>${examCount(t)} سؤال اختيار من متعدد، تُسحب عشوائياً من بنك ${mcqTotal(t)} سؤال، بحسب توزيع الدرجات المعلن، والنتيجة من 100.${store.get('best:'+tid,null)!=null?' أفضل نتيجة لك: <b>'+store.get('best:'+tid)+'</b>':''}</span><span class="go" style="display:inline-block;background:var(--accent);color:var(--accent-ink);padding:8px 16px;border-radius:999px;font-weight:600;font-size:.9rem;justify-self:start">ابدأ الاختبار</span></a>
     <a class="card paper-cta" href="#/${tid}/paper" style="text-decoration:none;color:inherit"><h2>ورقة تدريب كاملة</h2><span>ورقة تدريبية على نمط ما يُتداول من نماذج سابقة: مجالات مرتبة، واختيار من متعدد، وصح وخطأ، وأكمل، وأسئلة مقالية. تُصحح آلياً مع تقييم ذاتي للمقالي، والنتيجة من 100.${store.get('bestPaper:'+tid,null)!=null?' أفضل نتيجة: <b>'+store.get('bestPaper:'+tid)+'</b>':''}</span><span class="go" style="display:inline-block;background:var(--accent);color:var(--accent-ink);padding:8px 16px;border-radius:999px;font-weight:600;font-size:.9rem;justify-self:start">ابدأ الورقة</span></a>
     ${(()=>{const w=rec.weak(tid);return w.length?`<a class="card" href="#/${tid}/weak" style="text-decoration:none;color:inherit"><h2>أخطائي (${w.length})</h2><span>الأسئلة التي أخطأت فيها محفوظة على جهازك مع شرحها. الاختبارات تعيدها عليك أكثر من غيرها حتى تتقنها.</span><span class="go" style="display:inline-block;background:var(--accent);color:var(--accent-ink);padding:8px 16px;border-radius:999px;font-weight:600;font-size:.9rem;justify-self:start">راجع أخطاءك</span></a>`:'';})()}
@@ -302,7 +317,7 @@ function subject(tid,sid,mode){
   if(mode==='basics'&&!hasBasics) mode='notes';
   crumbs.innerHTML=`<a href="#/">الرئيسية</a> › <a href="#/${tid}">${esc(t.name)}</a> › <span>${esc(s.name)}</span>`;
   const m=t.marks[sid];
-  app.innerHTML=`<section class="hero"><h1>${esc(s.name)} <span class="pill gold">${m==null?'الدرجة غير محددة':m+' درجة'}</span></h1><p>${esc(s.source)}${t.notes[sid]?' · '+esc(t.notes[sid]):''}</p></section>
+  app.innerHTML=`<section class="hero"><h1>${esc(s.name)} <span class="pill gold">${m==null?'الدرجة غير محددة':mark(m)}</span></h1><p>${esc(s.source)}${t.notes[sid]?' · '+esc(t.notes[sid]):''}</p></section>
   <div class="tabs" role="tablist">
     ${hasBasics?`<button role="tab" id="tab-basics" aria-selected="${mode==='basics'}" data-mode="basics">من الصفر</button>`:''}
     <button role="tab" id="tab-notes" aria-selected="${mode==='notes'}" data-mode="notes">الملخص</button>
@@ -325,15 +340,23 @@ function basics(pane,sid,s,tr){
   function render(openIdx){
     pane.innerHTML=`<div class="card" style="margin-bottom:12px"><span class="pill gold">ابدأ هنا</span> دروس لمن لم يدرس المادة من قبل: لغة سهلة وأمثلة. بعد كل درس <b>تمرين عليه وحده</b>، فلا تنتقل حتى تتقنه. وإذا أتممتها انتقل إلى <b>الملخص</b> ثم <b>اختبر نفسك</b>.
       ${total?`<div class="pbar" style="margin-top:10px"><i style="width:${Math.round(100*passed/total)}%"></i></div><div class="hint" style="margin-top:6px">أتقنت <b>${passed}</b> من <b>${total}</b> درساً</div>`:''}</div>
+    <div class="card toc"><h3 style="margin:0 0 8px">الدروس</h3>
+      ${Ls.map((L,i)=>{ if(!L.t||!L.t.startsWith('درس')) return '';
+        const sc=done[key(i)]; const ok=(sc||0)>=80;
+        const st=!L.q.length?'<span class="c">مقدمة</span>':ok?'<span class="badge ok">أتقنته</span>':sc!=null?`<span class="badge no">${sc}%</span>`:'';
+        return `<a class="ti" href="#" data-go="${i}"><span class="tt">${esc(L.t.replace(/\s*—.*$/,''))}</span>${st}<span class="go2">${ok?'راجع':(sc!=null?'أعد':'ابدأ')} ←</span></a>`;}).join('')}
+    </div>
     <div class="row" style="margin-bottom:10px"><button class="btn" id="prn">طباعة الدروس أو حفظها PDF</button></div>
     ${Ls.map((L,i)=>{
       const sc=done[key(i)]; const ok=(sc||0)>=80;
       return `<div class="card notes" id="L${i}" style="margin-bottom:14px">
         ${L.t?`<h2>${esc(L.t)} ${L.q.length?(ok?'<span class="badge ok">أتقنته</span>':(sc!=null?`<span class="badge no">${sc}%</span>`:'')):''}</h2>`:''}
         ${mdToHtml(L.md)}
-        ${L.q.length?`<div class="row" style="margin-top:12px"><button class="btn ${openIdx===i?'':'primary'}" data-lesson="${i}">${openIdx===i?'إخفاء التمرين':`تمرين على هذا الدرس (${L.q.length})`}</button></div><div id="qz${i}"></div>`:''}
+        ${L.q.length?`<div class="row" style="margin-top:12px"><button class="btn ${openIdx===i?'':'primary'}" data-lesson="${i}">${openIdx===i?'إخفاء التمرين':`✍️ تمرّن على هذا الدرس (${L.q.length} أسئلة)`}</button><a class="btn" href="#" data-top="1">↑ الفهرس</a></div><div id="qz${i}"></div>`:''}
       </div>`;}).join('')}`;
     pane.querySelector('#prn').onclick=()=>window.print();
+    pane.querySelectorAll('[data-go]').forEach(a=>a.onclick=e=>{e.preventDefault();const el=document.getElementById('L'+a.dataset.go);if(el){el.scrollIntoView({behavior:'smooth',block:'start'});el.style.borderColor='var(--accent)';setTimeout(()=>el.style.borderColor='',1500);}});
+    pane.querySelectorAll('[data-top]').forEach(a=>a.onclick=e=>{e.preventDefault();pane.querySelector('.toc').scrollIntoView({behavior:'smooth',block:'start'});});
     pane.querySelectorAll('[data-lesson]').forEach(b=>b.onclick=()=>{
       const i=+b.dataset.lesson;
       if(openIdx===i){render(-1);return;}
