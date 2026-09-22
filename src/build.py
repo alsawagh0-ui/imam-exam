@@ -68,6 +68,10 @@ TRACKS = {
 # دروس "من الصفر": مكتوبة للمبتدئ الذي لم يدرس المادة قط
 BASICS = {
     "nahw": "20-من-الصفر-النحو.md",
+    "aqeedah": "21-من-الصفر-العقيدة.md",
+    "hadith": "22-من-الصفر-الحديث.md",
+    "tajweed": "23-من-الصفر-التجويد.md",
+    "tafsir": "24-من-الصفر-التفسير.md",
 }
 
 questions = json.loads((ROOT / "questions.json").read_text(encoding="utf-8"))
