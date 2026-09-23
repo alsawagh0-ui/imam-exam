@@ -25,7 +25,11 @@ def norm(t):
         t = t.replace(a, b)
     return t
 
-def split_lessons(md_text, pool):
+def flat(t):
+    t = re.sub(r"[*|_#>`]", " ", norm(t))
+    return re.sub(r"\s+", " ", t).strip()
+
+def split_lessons(md_text, pool, own_path=None):
     """يقسم ملف الدروس على العناوين، ويلتقط سطر ::quiz:: ليختار أسئلة الدرس من بنك المادة."""
     lessons, cur = [], None
     for line in md_text.split("\n"):
@@ -42,16 +46,22 @@ def split_lessons(md_text, pool):
     if cur: lessons.append(cur)
 
     out, used = [], set()
+    own = json.loads(own_path.read_text(encoding="utf-8")) if own_path and own_path.exists() else None
     for L in lessons:
         idxs = []
-        if L["kw"]:
-            kws = [norm(k) for k in L["kw"]]
+        body = flat("\n".join(L["md"]))
+        if own is not None:
+            # تمارين مكتوبة للدرس نفسه، وجواب كل سؤال نصٌّ منقول منه (تتحقق منه audit/check_lesson_q.py)
+            idxs = own.get(L["t"], [])
+            for q in idxs:
+                if flat(q["e"]) not in body: raise SystemExit(f"شاهد ليس من الدرس: {L['t']}: {q['e']}")
+        elif L["kw"]:
+            # الفقه: لا يدخل الدرسَ إلا سؤالٌ نصُّ شرحه (من دليل الطالب) موجود في الدرس نفسه
             for i, q in enumerate(pool):
                 if i in used: continue
-                hay = norm(q["q"] + " " + q["o"][q["c"]] + " " + q.get("e", ""))
-                if any(k in hay for k in kws):
+                quotes = re.findall(r"«([^»]+)»", q.get("e", ""))
+                if quotes and all(flat(x) in body for x in quotes):
                     idxs.append(i); used.add(i)
-                if len(idxs) >= 12: break
         out.append({"t": L["t"], "md": "\n".join(L["md"]).strip(), "q": idxs})
     return [L for L in out if L["md"] or L["q"]]
 
@@ -146,7 +156,7 @@ for sid, s in SUBJECTS.items():
         "name": s["name"], "source": s["source"],
         "notes": ((md("07-دليل-الطالب-العبادات.md") + "\n\n" + md("10-المعاملات-الكوكب-الغارب.md") + "\n\n" + md("11-الجنايات-والحدود.md") + "\n\n" if sid=="fiqh" else "") + md(s["file"]) + ("\n\n" + md("01b-الفقه-إضافات-من-دليل-الطالب.md") if sid=="fiqh" else ("\n\n" + md("08-غاية-المريد-التجويد.md") if sid=="tajweed" else ("\n\n" + md("02-الحديث-الأربعون-النووية.md") if sid=="hadith" else ("\n\n" + md("03-العقيدة-بريق-الجمان.md") if sid=="aqeedah" else ("\n\n" + md("06-النحو-مراجعة.md") if sid=="nahw" else "")))))) if s["file"] else "## المقرر لم يُرسل بعد\n\nأرسل صور أو ملف ميثاق المسجد ليُضاف هنا.",
         "lessons": split_lessons((ROOT / BASICS[sid]).read_text(encoding="utf-8"),
-                                 [q for q in mcq if q["s"] == sid]) if sid in BASICS else [],
+                                 [q for q in mcq if q["s"] == sid], ROOT / "lesson_q" / f"{sid}.json") if sid in BASICS else [],
         "questions": [q for q in questions if q["s"] == sid],
         "mcq": [q for q in mcq if q["s"] == sid],
         "tf": [q for q in tf if q["s"] == sid],

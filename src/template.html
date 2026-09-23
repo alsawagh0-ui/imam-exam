@@ -392,7 +392,7 @@ function basics(pane,sid,s,tr){
       return `<div class="card notes" id="L${i}" style="margin-bottom:14px">
         ${L.t?`<h2>${esc(L.t)} ${L.q.length?(ok?'<span class="badge ok">أتقنته</span>':(sc!=null?`<span class="badge no">${sc}%</span>`:'')):''}</h2>`:''}
         ${mdToHtml(L.md)}
-        ${L.q.length?`<div class="row" style="margin-top:12px"><button class="btn ${openIdx===i?'':'primary'}" data-lesson="${i}">${openIdx===i?'إخفاء التمرين':`✍️ تمرّن على هذا الدرس (${L.q.length} أسئلة)`}</button><a class="btn" href="#" data-top="1">↑ الفهرس</a></div><div id="qz${i}"></div>`:''}
+        ${L.q.length?`<div class="row" style="margin-top:12px"><button class="btn ${openIdx===i?'':'primary'}" data-lesson="${i}">${openIdx===i?'إخفاء التمرين':`تمرّن على هذا الدرس (${Math.min(10,L.q.length)} أسئلة)`}</button><a class="btn" href="#" data-top="1">↑ الفهرس</a></div><div id="qz${i}"></div>`:''}
       </div>`;}).join('')}`;
     pane.querySelector('#prn').onclick=()=>window.print();
     pane.querySelectorAll('[data-go]').forEach(a=>a.onclick=e=>{e.preventDefault();const el=document.getElementById('L'+a.dataset.go);if(el){el.scrollIntoView({behavior:'smooth',block:'start'});el.style.borderColor='var(--accent)';setTimeout(()=>el.style.borderColor='',1500);}});
@@ -406,9 +406,9 @@ function basics(pane,sid,s,tr){
   }
   function runQuiz(i){
     const host=document.getElementById('qz'+i); if(!host) return;
-    const pool=Ls[i].q.map(k=>(s.mcq||[])[k]).filter(q=>q&&inScope(tr,sid,q));
+    const pool=Ls[i].q.map(k=>typeof k==='object'?k:(s.mcq||[])[k]).filter(q=>q&&inScope(tr,sid,q));
     if(!pool.length){host.innerHTML='<div class="empty">لا أسئلة لهذا الدرس في مقررك.</div>';return;}
-    const qs=shuffle([...pool]).map(q=>{const ix=shuffle(q.o.map((_,k)=>k));return {q:q.q,o:ix.map(k=>q.o[k]),c:ix.indexOf(q.c),e:q.e||'',pick:-1};});
+    const qs=shuffle([...pool]).slice(0,10).map(q=>{const ix=shuffle(q.o.map((_,k)=>k));return {q:q.q,o:ix.map(k=>q.o[k]),c:ix.indexOf(q.c),e:q.e||'',own:!q.s,pick:-1};});
     let n=0;
     function step(){
       if(n>=qs.length){
@@ -435,7 +435,7 @@ function basics(pane,sid,s,tr){
       host.innerHTML=`<div class="qcard"><div class="qn">تمرين · السؤال ${n+1} من ${qs.length}</div>
         <div class="qt">${esc(x.q)}</div>
         <div class="opts">${x.o.map((o,k)=>`<button class="opt ${x.pick<0?'':(k===x.c?'right':(k===x.pick?'wrong':''))}" data-k="${k}" ${x.pick<0?'':'disabled'}>${AR[k]}) ${esc(o)}${x.pick>=0&&k===x.c?' ✓':''}</button>`).join('')}</div>
-        ${x.pick>=0?`${x.e?`<div class="why"><b>من نص الكتاب:</b> ${esc(x.e)}</div>`:''}<div class="row" style="margin-top:12px"><button class="btn primary" id="nx">${n===qs.length-1?'النتيجة':'التالي'}</button></div>`:''}</div>`;
+        ${x.pick>=0?`${x.e?`<div class="why"><b>${x.own?'من الدرس:':'من نص الكتاب:'}</b> ${esc(x.e)}</div>`:''}<div class="row" style="margin-top:12px"><button class="btn primary" id="nx">${n===qs.length-1?'النتيجة':'التالي'}</button></div>`:''}</div>`;
       host.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{if(x.pick<0){x.pick=+b.dataset.k;step();}});
       const nx=host.querySelector('#nx'); if(nx) nx.onclick=()=>{n++;step();};
     }
