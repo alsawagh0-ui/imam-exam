@@ -325,24 +325,24 @@ function track(tid){
       return `<div class="card learn"><h2>ابدأ من هنا: تعلّم من الصفر</h2>
         <p style="margin:4px 0 12px;color:var(--muted)">دروس بلغة سهلة لمن لم يدرس المادة، <b>وبعد كل درس تمرين عليه</b> مع شرح كل إجابة.</p>
         <p style="margin:0 0 12px"><b>اختر مادة لتبدأ دروسها وتمارينها:</b></p>
-        <div class="learn-grid">${subs.map(sid=>{const L=DATA.subjects[sid].lessons.filter(x=>x.q.length);const ok=L.filter((x,i)=>(dn[sid+':'+DATA.subjects[sid].lessons.indexOf(x)]||0)>=80).length;
+        <div class="learn-grid">${subs.map(sid=>{const L=DATA.subjects[sid].lessons.filter(x=>x.q.length&&inScope(t,sid,x));const ok=L.filter((x,i)=>(dn[sid+':'+DATA.subjects[sid].lessons.indexOf(x)]||0)>=80).length;
           const started=Object.keys(dn).some(k=>k.startsWith(sid+':'));
           return `<a class="lg" href="#/${tid}/${sid}/basics">
-            <span class="top"><span class="n">${esc(DATA.subjects[sid].name)}</span><span class="c">${DATA.subjects[sid].lessons.filter(x=>x.t&&x.t.startsWith('درس')).length} درساً · ${L.length} تمريناً</span></span>
+            <span class="top"><span class="n">${esc(DATA.subjects[sid].name)}</span><span class="c">${DATA.subjects[sid].lessons.filter(x=>x.t&&x.t.startsWith('درس')&&inScope(t,sid,x)).length} درساً · ${L.length} تمريناً</span></span>
             <span class="bar"><i style="width:${L.length?Math.round(100*ok/L.length):0}%"></i></span>
             <span class="row2"><span class="c">${ok?`أتقنت ${ok} من ${L.length}`:(started?'بدأت':'لم تبدأ بعد')}</span><span class="cta">${started?'أكمل التدريب':'ابدأ التدريب'} ←</span></span>
           </a>`;}).join('')}</div></div>`;})()}
     <a class="card paper-cta" href="#/${tid}/paper"><h2>ورقة تدريب كاملة</h2><span>ورقة تدريبية على نمط ما يُتداول من نماذج سابقة: مجالات مرتبة، واختيار من متعدد، وصح وخطأ، وأكمل، وأسئلة مقالية. تُصحح آلياً مع تقييم ذاتي للمقالي، والنتيجة من 100.${store.get('bestPaper:'+tid,null)!=null?' أفضل نتيجة: <b>'+store.get('bestPaper:'+tid)+'</b>':''}</span><span class="go">ابدأ الورقة</span></a>
     <a class="card exam-cta" href="#/${tid}/exam"><h2>اختبار تدريبي شامل</h2><span>${examCount(t)} سؤال اختيار من متعدد، تُسحب عشوائياً من بنك ${mcqTotal(t)} سؤال، بحسب توزيع الدرجات المعلن، والنتيجة من 100.${store.get('best:'+tid,null)!=null?' أفضل نتيجة لك: <b>'+store.get('best:'+tid)+'</b>':''}</span><span class="go">ابدأ الاختبار</span></a>
     <a class="card" href="#/${tid}/numbers"><h2>ورقة الأرقام</h2><span>كل ما يُسأل عنه بالعدد في مقررك، في صفحة واحدة قابلة للطباعة: فروض الوضوء، أركان الصلاة، الأنصبة، المواقيت، المدود، كلمات الأذان. اقرأها قبل الاختبار.</span><span class="go">افتح الورقة</span></a>
-    ${t.marks.fiqh&&(DATA.mufid||[]).length?(()=>{const s=mstate.all();const C=DATA.mufid;const w=C.filter(c=>mStatus(c,s)==='weak').length,d=C.filter(c=>mStatus(c,s)==='due').length,g=C.filter(c=>mStatus(c,s)==='good').length;return `<a class="card feature" href="#/${tid}/mufid"><h2>اختبار مفيد الصاحب</h2><span>${C.length} سؤالاً مقالياً من المذكرة كلها: تجيب، ثم تقارن بالإجابة النموذجية وتحدد كم أصبت. ما تتعثر فيه يتكرر حتى تتقنه.</span><span class="meta">${g} متقن · ${w} يحتاج تقوية${d?' · '+d+' حان وقت مراجعته':''}</span><span class="go">${w+d?'أكمل المراجعة':'ابدأ الاختبار'}</span></a>`;})():''}
+    ${t.marks.fiqh&&(DATA.mufid||[]).length?(()=>{const s=mstate.all();const C=DATA.mufid.filter(c=>inScope(t,'fiqh',c));const w=C.filter(c=>mStatus(c,s)==='weak').length,d=C.filter(c=>mStatus(c,s)==='due').length,g=C.filter(c=>mStatus(c,s)==='good').length;return `<a class="card feature" href="#/${tid}/mufid"><h2>اختبار مفيد الصاحب</h2><span>${C.length} سؤالاً مقالياً ${(t.scope||[]).includes('muamalat')?'من المذكرة كلها':'من أبواب العبادات في المذكرة'}: تجيب، ثم تقارن بالإجابة النموذجية وتحدد كم أصبت. ما تتعثر فيه يتكرر حتى تتقنه.</span><span class="meta">${g} متقن · ${w} يحتاج تقوية${d?' · '+d+' حان وقت مراجعته':''}</span><span class="go">${w+d?'أكمل المراجعة':'ابدأ الاختبار'}</span></a>`;})():''}
     ${(()=>{const w=rec.weak(tid);return w.length?`<a class="card" href="#/${tid}/weak"><h2>أخطائي (${w.length})</h2><span>الأسئلة التي أخطأت فيها محفوظة على جهازك مع شرحها. الاختبارات تعيدها عليك أكثر من غيرها حتى تتقنها.</span><span class="go">راجع أخطاءك</span></a>`:'';})()}
     <h2>المواد حسب وزن الدرجات</h2>
     <div class="subjects">
       ${Object.entries(t.marks).map(([sid,m])=>{const s=DATA.subjects[sid];const d=done[sid]||{};const known=Object.values(d).filter(x=>x==='y').length;return `<a class="subj" href="#/${tid}/${sid}">
         <span class="nm">${esc(s.name)}</span>
         <span class="mk"><b>${m==null?'؟':m}</b><span>${(m>=3&&m<=10)?'درجات':'درجة'}</span></span>
-        <span class="src">${esc(s.source)}${t.notes[sid]?' · '+esc(t.notes[sid]):''} · ${s.questions.length||poolMcq(t,sid).length} سؤال${known?` · أتقنت ${known}`:''}</span>
+        <span class="src">${esc(s.source)}${t.notes[sid]?' · '+esc(t.notes[sid]):''} · ${s.questions.filter(q=>inScope(t,sid,q)).length||poolMcq(t,sid).length} سؤال${known?` · أتقنت ${known}`:''}</span>
         ${m!=null?`<span class="bar"><i style="width:${Math.round(100*m/total)}%"></i></span>`:''}
       </a>`;}).join('')}
     </div>
@@ -361,19 +361,19 @@ function subject(tid,sid,mode){
   <div class="tabs" role="tablist">
     ${hasBasics?`<button role="tab" id="tab-basics" aria-selected="${mode==='basics'}" data-mode="basics">من الصفر</button>`:''}
     <button role="tab" id="tab-notes" aria-selected="${mode==='notes'}" data-mode="notes">الملخص</button>
-    <button role="tab" id="tab-quiz" aria-selected="${mode==='quiz'}" data-mode="quiz">اختبر نفسك (${s.questions.length||(s.mcq||[]).length})</button>
+    <button role="tab" id="tab-quiz" aria-selected="${mode==='quiz'}" data-mode="quiz">اختبر نفسك (${s.questions.filter(q=>inScope(t,sid,q)).length||poolMcq(t,sid).length})</button>
   </div>
   <div id="pane"></div>`;
   app.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{store.set('tab:'+sid,b.dataset.mode);location.hash='#/'+tid+'/'+sid+'/'+b.dataset.mode;});
   const pane=document.getElementById('pane');
   if(mode==='basics'){basics(pane,sid,s,t);}
-  else if(mode==='notes'){pane.innerHTML=`<div class="row" style="margin-bottom:10px"><button class="btn" id="prn">طباعة الملخص أو حفظه PDF</button></div><div class="card notes">${mdToHtml(s.notes)}</div>`;pane.querySelector('#prn').onclick=()=>window.print();}
+  else if(mode==='notes'){pane.innerHTML=`<div class="row" style="margin-bottom:10px"><button class="btn" id="prn">طباعة الملخص أو حفظه PDF</button></div><div class="card notes">${mdToHtml(s.notes_ibadat&&!(t.scope||[]).includes('muamalat')?s.notes_ibadat:s.notes)}</div>`;pane.querySelector('#prn').onclick=()=>window.print();}
   else quiz(pane,sid,s,t);
 }
 
 // ====== تبويب "من الصفر": دروس متسلسلة مع تمرين بعد كل درس ======
 function basics(pane,sid,s,tr){
-  const Ls=s.lessons||[]; const done=store.get('lesson',{}); const key=i=>sid+':'+i;
+  const Ls=(s.lessons||[]).map(L=>inScope(tr,sid,L)?L:{t:'',md:'',q:[],hide:1}); const done=store.get('lesson',{}); const key=i=>sid+':'+i;
   const AR=['أ','ب','ج','د'];
   const total=Ls.filter(L=>L.q.length).length;
   const passed=Ls.filter((L,i)=>L.q.length&&(done[key(i)]||0)>=80).length;
@@ -387,7 +387,7 @@ function basics(pane,sid,s,tr){
         return `<a class="ti" href="#" data-go="${i}"><span class="tt">${esc(L.t.replace(/\s*—.*$/,''))}</span>${st}<span class="go2">${ok?'راجع':(sc!=null?'أعد':'ابدأ')} ←</span></a>`;}).join('')}
     </div>
     <div class="row" style="margin-bottom:10px"><button class="btn" id="prn">طباعة الدروس أو حفظها PDF</button></div>
-    ${Ls.map((L,i)=>{
+    ${Ls.map((L,i)=>{ if(L.hide) return '';
       const sc=done[key(i)]; const ok=(sc||0)>=80;
       return `<div class="card notes" id="L${i}" style="margin-bottom:14px">
         ${L.t?`<h2>${esc(L.t)} ${L.q.length?(ok?'<span class="badge ok">أتقنته</span>':(sc!=null?`<span class="badge no">${sc}%</span>`:'')):''}</h2>`:''}
@@ -446,7 +446,8 @@ function basics(pane,sid,s,tr){
 
 function quiz(pane,sid,s,tr){
   // عند عدم وجود أسئلة مقالية لهذه المادة، تُستخدم أسئلة الاختيار كبطاقات مراجعة
-  const qs=(s.questions&&s.questions.length)?s.questions:poolMcq(tr,sid).map(q=>({q:q.q,a:q.o[q.c]})); if(!qs.length){pane.innerHTML='<div class="empty">لا توجد أسئلة لهذه المادة بعد.</div>';return;}
+  const own=(s.questions||[]).filter(q=>inScope(tr,sid,q));
+  const qs=own.length?own:poolMcq(tr,sid).map(q=>({q:q.q,a:q.o[q.c]})); if(!qs.length){pane.innerHTML='<div class="empty">لا توجد أسئلة لهذه المادة بعد.</div>';return;}
   const done=store.get('done',{}); done[sid]=done[sid]||{};
   let order=qs.map((_,i)=>i); let idx=store.get('idx:'+sid,0)%qs.length; let shown=false;
   function render(){
@@ -709,7 +710,7 @@ function mStatus(c,s){const e=s[c.id]; if(!e) return 'new'; if(e.r<1) return 'we
 function mufid(tid){
   const t=DATA.tracks[tid]; if(!t) return home();
   crumbs.innerHTML=`<a href="#/">الرئيسية</a> › <a href="#/${tid}">${esc(t.name)}</a> › <span>اختبار مفيد الصاحب</span>`;
-  const C=DATA.mufid||[]; const groups=[...new Set(C.map(c=>c.g))];
+  const C=(DATA.mufid||[]).filter(c=>inScope(t,'fiqh',c)); const groups=[...new Set(C.map(c=>c.g))];
   let g=store.get('mufid:g','');
   function dash(){
     const s=mstate.all(); const pool=C.filter(c=>!g||c.g===g);
@@ -717,7 +718,7 @@ function mufid(tid){
     const weakBy={}; C.forEach(c=>{if(mStatus(c,s)==='weak') weakBy[c.g]=(weakBy[c.g]||0)+1;});
     const nextDue=pool.filter(c=>mStatus(c,s)==='good').map(c=>s[c.id].due).sort((a,b)=>a-b)[0];
     app.innerHTML=`<section class="hero"><p class="eyebrow">فقه · مذكرة مفيد الصاحب</p><h1>اختبار مفيد الصاحب</h1>
-      <p>${C.length} سؤالاً مقالياً تغطي المذكرة كلها. أجب من ذاكرتك، ثم اعرض الإجابة النموذجية وحدد كم نقطة أصبت. ما تتعثر فيه يعود عليك في الجلسة نفسها، وما تتقنه يؤجَّل للمراجعة بعد أيام.</p></section>
+      <p>${C.length} سؤالاً مقالياً تغطي ${(t.scope||[]).includes('muamalat')?'المذكرة كلها':'أبواب العبادات من المذكرة (منهج المؤذن)'}. أجب من ذاكرتك، ثم اعرض الإجابة النموذجية وحدد كم نقطة أصبت. ما تتعثر فيه يعود عليك في الجلسة نفسها، وما تتقنه يؤجَّل للمراجعة بعد أيام.</p></section>
     <div class="stack">
       <div class="mstats">
         <div><b>${cnt.weak}</b><span>تحتاج تقوية</span></div>

@@ -165,6 +165,27 @@ for sid, s in SUBJECTS.items():
 for tid, t in TRACKS.items():
     data["tracks"][tid] = t
 
+# ما هو من المعاملات (خارج منهج المؤذن): يُوسم بـ sc ليُخفى عن المسار الذي لا يشملها
+MUAMALAT = re.compile(r"المعاملات|البيوع|الربا|النكاح|العدة|الرضاع|النفقات|الحضانة|الأطعمة|الذكاة|الصيد|الأيمان|النذور|الجنايات|الحدود")
+for L in data["subjects"]["fiqh"]["lessons"]:
+    if MUAMALAT.search(L["t"]): L["sc"] = "muamalat"
+for c in mufid:
+    # «الصيد» هنا باب الأطعمة، لا جزاء الصيد في الحج
+    if MUAMALAT.search(c["g"]) and c["g"] != "الحج": c["sc"] = "muamalat"
+
+def drop_sections(text):
+    """يحذف أقسام ## التي عنوانها من المعاملات."""
+    out, keep = [], True
+    for line in text.split("\n"):
+        if line.startswith("## "): keep = not MUAMALAT.search(line)
+        elif line.startswith("# "): keep = True
+        if keep: out.append(line)
+    return "\n".join(out)
+
+# ملخص الفقه لمن منهجه العبادات فقط: بلا الكوكب الغارب ولا الجنايات ولا أبواب المعاملات
+data["subjects"]["fiqh"]["notes_ibadat"] = "\n\n".join([
+    md("07-دليل-الطالب-العبادات.md"), drop_sections(md(SUBJECTS["fiqh"]["file"])), md("01b-الفقه-إضافات-من-دليل-الطالب.md")])
+
 template = (ROOT / "template.html").read_text(encoding="utf-8")
 payload = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
 OUT.parent.mkdir(parents=True, exist_ok=True)
