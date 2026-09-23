@@ -139,7 +139,8 @@ fill = vetted(json.loads((ROOT / "fill.json").read_text(encoding="utf-8")))
 numbers = json.loads((ROOT / "numbers.json").read_text(encoding="utf-8"))
 plan = md("00-الخطة-وتحليل-الاختبارات.md")
 
-data = {"built": datetime.date.today().isoformat(), "plan": plan, "numbers": numbers, "tracks": {}, "subjects": {}}
+mufid = json.loads((ROOT / "mufid.json").read_text(encoding="utf-8"))
+data = {"built": datetime.date.today().isoformat(), "plan": plan, "numbers": numbers, "mufid": mufid, "tracks": {}, "subjects": {}}
 for sid, s in SUBJECTS.items():
     data["subjects"][sid] = {
         "name": s["name"], "source": s["source"],
