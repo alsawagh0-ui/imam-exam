@@ -151,6 +151,8 @@ plan = md("00-الخطة-وتحليل-الاختبارات.md")
 
 mufid = json.loads((ROOT / "mufid.json").read_text(encoding="utf-8"))
 data = {"built": datetime.date.today().isoformat(), "plan": plan, "numbers": numbers, "mufid": mufid, "tracks": {}, "subjects": {}}
+# «الصفوة»: أهم ما في كل مادة من نص كتابها (safwa/*.md)
+data["safwa"] = {n: (ROOT / "safwa" / f"{n}.md").read_text(encoding="utf-8") for n in ("all", "hadith", "aqeedah", "nahw", "tajweed", "tafsir", "mithaq") if (ROOT / "safwa" / f"{n}.md").exists()}
 for sid, s in SUBJECTS.items():
     data["subjects"][sid] = {
         "name": s["name"], "source": s["source"],

@@ -86,6 +86,7 @@ h3{font-size:1.05rem}
 .tabs button:focus-visible,.btn:focus-visible,.choice:focus-visible,.subj:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .notes{max-width:72ch;font-family:var(--book);font-size:1.05rem;line-height:2}
 .notes h1,.notes h2,.notes h3{font-family:var(--display)}
+.notes.safwa{font-family:var(--body);font-size:1rem;line-height:1.85}
 .notes h1{font-size:1.6rem;margin:22px 0 8px}
 .notes h2{font-size:1.3rem;margin:26px 0 8px;padding-top:10px;border-top:1px solid var(--line)}
 .notes h3{font-size:1.1rem;margin:18px 0 6px;color:var(--accent)}
@@ -336,6 +337,7 @@ function track(tid){
     <a class="card paper-cta" href="#/${tid}/paper"><h2>ورقة تدريب كاملة</h2><span>ورقة تدريبية على نمط ما يُتداول من نماذج سابقة: مجالات مرتبة، واختيار من متعدد، وصح وخطأ، وأكمل، وأسئلة مقالية. تُصحح آلياً مع تقييم ذاتي للمقالي، والنتيجة من 100.${store.get('bestPaper:'+tid,null)!=null?' أفضل نتيجة: <b>'+store.get('bestPaper:'+tid)+'</b>':''}</span><span class="go">ابدأ الورقة</span></a>
     <a class="card exam-cta" href="#/${tid}/exam"><h2>اختبار تدريبي شامل</h2><span>${examCount(t)} سؤال اختيار من متعدد، تُسحب عشوائياً من بنك ${mcqTotal(t)} سؤال، بحسب توزيع الدرجات المعلن، والنتيجة من 100.${store.get('best:'+tid,null)!=null?' أفضل نتيجة لك: <b>'+store.get('best:'+tid)+'</b>':''}</span><span class="go">ابدأ الاختبار</span></a>
     <a class="card" href="#/${tid}/numbers"><h2>ورقة الأرقام</h2><span>كل ما يُسأل عنه بالعدد في مقررك، في صفحة واحدة قابلة للطباعة: فروض الوضوء، أركان الصلاة، الأنصبة، المواقيت، المدود، كلمات الأذان. اقرأها قبل الاختبار.</span><span class="go">افتح الورقة</span></a>
+    ${DATA.safwa&&DATA.safwa.all?`<a class="card feature" href="#/${tid}/safwa"><h2>الصفوة</h2><span>أهم ما في كل مادة في صفحات قليلة، مرتّبة من الأكثر سؤالاً، وكل معلومة من نص الكتاب. ابدأ بـ«صفوة الصفوة»: كل المواد في خمس صفحات.</span><span class="go">افتح الصفوة</span></a>`:''}
     ${t.marks.fiqh&&(DATA.mufid||[]).length?(()=>{const s=mstate.all();const C=DATA.mufid.filter(c=>inScope(t,'fiqh',c));const w=C.filter(c=>mStatus(c,s)==='weak').length,d=C.filter(c=>mStatus(c,s)==='due').length,g=C.filter(c=>mStatus(c,s)==='good').length;return `<a class="card feature" href="#/${tid}/mufid"><h2>اختبار مفيد الصاحب</h2><span>${C.length} سؤالاً مقالياً ${(t.scope||[]).includes('muamalat')?'من المذكرة كلها':'من أبواب العبادات في المذكرة'}: تجيب، ثم تقارن بالإجابة النموذجية وتحدد كم أصبت. ما تتعثر فيه يتكرر حتى تتقنه.</span><span class="meta">${g} متقن · ${w} يحتاج تقوية${d?' · '+d+' حان وقت مراجعته':''}</span><span class="go">${w+d?'أكمل المراجعة':'ابدأ الاختبار'}</span></a>`;})():''}
     ${(()=>{const w=rec.weak(tid);return w.length?`<a class="card" href="#/${tid}/weak"><h2>أخطائي (${w.length})</h2><span>الأسئلة التي أخطأت فيها محفوظة على جهازك مع شرحها. الاختبارات تعيدها عليك أكثر من غيرها حتى تتقنها.</span><span class="go">راجع أخطاءك</span></a>`:'';})()}
     <h2>المواد حسب وزن الدرجات</h2>
@@ -704,6 +706,26 @@ function weak(tid){
   render();
 }
 
+// ---------- الصفوة: أهم ما في كل مادة ----------
+const SAFWA_NAMES={all:'صفوة الصفوة — كل المواد',hadith:'صفوة الحديث',aqeedah:'صفوة العقيدة',nahw:'صفوة النحو',tajweed:'صفوة التجويد',tafsir:'صفوة التفسير',mithaq:'صفوة ميثاق المسجد'};
+function safwa(tid,name){
+  const t=DATA.tracks[tid]; if(!t||!DATA.safwa) return home();
+  const S=DATA.safwa, pdf=location.hostname.endsWith('github.io');
+  const list=['all',...Object.keys(t.marks).filter(s=>S[s])];
+  if(!name||!S[name]){
+    crumbs.innerHTML=`<a href="#/">الرئيسية</a> › <a href="#/${tid}">${esc(t.name)}</a> › <span>الصفوة</span>`;
+    app.innerHTML=`<section class="hero"><p class="eyebrow">مسار ${esc(t.name)}</p><h1>الصفوة</h1>
+      <p>أهم ما في كل مادة في صفحات قليلة. رتّبناها من الأكثر سؤالاً في بنك الأسئلة، وكل معلومة من نص الكتاب المقرر مع رقم صفحته. هي أفضل ما يُذاكر إذا ضاق الوقت، لكنها لا تضمن أن الاختبار لا يخرج عنها.</p></section>
+      <div class="stack">${list.map(n=>`<a class="card${n==='all'?' feature':''}" href="#/${tid}/safwa/${n}"><h2>${esc(SAFWA_NAMES[n])}</h2><span>${n==='all'?'كل المواد في خمس صفحات: ابدأ بها.':n==='tafsir'?'تنبيه: لم تُطابَق على كتاب مختصر زبدة التفسير لعدم توفره.':esc(DATA.subjects[n].source)}</span><span class="go">اقرأ</span></a>`).join('')}</div>`;
+    return;
+  }
+  crumbs.innerHTML=`<a href="#/">الرئيسية</a> › <a href="#/${tid}">${esc(t.name)}</a> › <a href="#/${tid}/safwa">الصفوة</a> › <span>${esc(SAFWA_NAMES[name])}</span>`;
+  app.innerHTML=`<div class="row" style="margin:18px 0 10px"><button class="btn primary" id="prn">طباعة أو حفظ PDF</button>${pdf?`<a class="btn" href="safwa/${name}.pdf" target="_blank" rel="noopener">تنزيل PDF جاهز</a>`:''}<a class="btn" href="#/${tid}/safwa">كل الصفوة</a></div>
+    <div class="card notes safwa">${mdToHtml(S[name])}</div>`;
+  app.querySelector('#prn').onclick=()=>window.print();
+  window.scrollTo(0,0);
+}
+
 // ---------- اختبار مفيد الصاحب: مقالي + تقييم ذاتي + مراجعة متباعدة ----------
 const DAY=86400000, GAPS=[1,3,7,14,30];
 const mstate={all(){return store.get('mufid',{});},save(s){store.set('mufid',s);}};
@@ -806,6 +828,7 @@ function route(){
   if(h[1]==='weak') return weak(h[0]);
   if(h[1]==='numbers') return numbers(h[0]);
   if(h[1]==='mufid') return mufid(h[0]);
+  if(h[1]==='safwa') return safwa(h[0],h[2]);
   return subject(h[0],h[1],h[2]);
 }
 window.addEventListener('hashchange',route); route();
