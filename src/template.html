@@ -716,7 +716,7 @@ function safwa(tid,name){
     crumbs.innerHTML=`<a href="#/">الرئيسية</a> › <a href="#/${tid}">${esc(t.name)}</a> › <span>الصفوة</span>`;
     app.innerHTML=`<section class="hero"><p class="eyebrow">مسار ${esc(t.name)}</p><h1>الصفوة</h1>
       <p>أهم ما في كل مادة في صفحات قليلة. رتّبناها من الأكثر سؤالاً في بنك الأسئلة، وكل معلومة من نص الكتاب المقرر مع رقم صفحته. هي أفضل ما يُذاكر إذا ضاق الوقت، لكنها لا تضمن أن الاختبار لا يخرج عنها.</p></section>
-      <div class="stack">${list.map(n=>`<a class="card${n==='all'?' feature':''}" href="#/${tid}/safwa/${n}"><h2>${esc(SAFWA_NAMES[n])}</h2><span>${n==='all'?'كل المواد في خمس صفحات: ابدأ بها.':n==='tafsir'?'تنبيه: لم تُطابَق على كتاب مختصر زبدة التفسير لعدم توفره.':esc(DATA.subjects[n].source)}</span><span class="go">اقرأ</span></a>`).join('')}</div>`;
+      <div class="stack">${list.map(n=>`<a class="card${n==='all'?' feature':''}" href="#/${tid}/safwa/${n}"><h2>${esc(SAFWA_NAMES[n])}</h2><span>${n==='all'?'كل المواد في خمس صفحات: ابدأ بها.':esc(DATA.subjects[n].source)}</span><span class="go">اقرأ</span></a>`).join('')}</div>`;
     return;
   }
   crumbs.innerHTML=`<a href="#/">الرئيسية</a> › <a href="#/${tid}">${esc(t.name)}</a> › <a href="#/${tid}/safwa">الصفوة</a> › <span>${esc(SAFWA_NAMES[name])}</span>`;
