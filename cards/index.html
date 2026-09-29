@@ -1106,16 +1106,12 @@ async function listenRun(){
 // شاشة رئيسية فيها زر واحد كبير، وبطاقة بسيطة: اختيار أو «اكشف» ثم عرفتها/ما عرفتها
 function allDue(){ const now=Date.now(); return deck.filter(c=>!muted(c)&&st[c.id]&&st[c.id].due<=now); }
 function todayList(extra){
-  const due=allDue().sort((a,b)=>st[a.id].due-st[b.id].due);
+  // الفقه أول: المراجعات المستحقة، ثم جديد الفقه، وبعد ما يخلص الفقه تجي بقية المواد بحسب درجاتها
+  const due=allDue().sort((a,b)=>(a.s==='fiqh'?0:1)-(b.s==='fiqh'?0:1)||st[a.id].due-st[b.id].due);
   const n=(extra||0)+(plan().final?0:plan().left);
-  const fresh=mixNew(deck.filter(c=>!muted(c)&&!st[c.id])).slice(0,n);
-  // نخلط المستحق مع الجديد ونفرّق المواد، عشان كل 20 بطاقة يكون فيها من كل المواد
-  const by={}; for(const c of [...due,...fresh]) (by[c.s]=by[c.s]||[]).push(c);
-  const M=marks(), keys=Object.keys(by).sort((a,b)=>(M[b]||0)-(M[a]||0)), out=[], used={};
-  while(out.length<due.length+fresh.length){ let best=null,bv=Infinity;
-    for(const k of keys){ if(!by[k].length) continue; const v=(used[k]||0)/Math.pow(M[k]||4,.75); if(v<bv){bv=v;best=k;} }
-    out.push(by[best].shift()); used[best]=(used[best]||0)+1; }
-  return out;
+  const nw=deck.filter(c=>!muted(c)&&!st[c.id]);
+  const fresh=[...mixChap(nw.filter(c=>c.s==='fiqh')),...mixNew(nw.filter(c=>c.s!=='fiqh'))].slice(0,n);
+  return [...due,...fresh];
 }
 function subjPage(){
   page('📚 ذاكر مادة معينة',`<div class="menu">${subjects().map(k=>{ const cs=deck.filter(c=>c.s===k&&!muted(c)), kn=cs.filter(c=>st[c.id]?.t==='r').length;
