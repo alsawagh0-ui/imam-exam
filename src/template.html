@@ -776,7 +776,7 @@ function mufid(tid){
       <div class="pbar"><i style="width:${Math.round(100*done/total)}%"></i></div>
       <article class="qcard mq">
         <h2 class="qt">${esc(c.q)}</h2>
-        <p class="ask">${need===1?'أجب':all?(c.pts.length>2?`اذكرها كلها (${c.pts.length})`:'أجب إجابة تامة'):`اذكر ${need} منها على الأقل (هي ${c.pts.length})`}</p>
+        <p class="ask">${all?'أجب من حفظك':`اذكر ${need} منها على الأقل`}</p>
         <textarea id="ans" class="warea" rows="4" placeholder="اكتب إجابتك هنا، أو استحضرها في ذهنك"></textarea>
         <div id="model"></div>
         <div class="row" id="act"><button class="btn primary" id="rev">أظهر الإجابة النموذجية</button><button class="btn" id="out">إنهاء</button></div>
