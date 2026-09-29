@@ -1244,7 +1244,7 @@ function mufRun(Q,i,ok,g){
   const c=Q[i], pct=Math.round(100*i/Q.length), lv=mlev(c.id);
   app.innerHTML=`<div class="bar"><button class="link" id="x">✕</button><div class="meter" style="flex:1"><i style="width:${pct}%"></i></div><span>${i}/${Q.length}</span></div>
     <article class="card"><p class="lbl" style="margin:0">${esc(g)}${lv===2?' · باقي مرة وتتقنه':''}</p><p class="q">${esc(c.q)}</p>
-    <p class="note" style="text-align:right;margin:0">${c.need<c.pts.length?`اذكر ${c.need} منها على الأقل من حفظك`:'جاوب من حفظك'}</p>
+    <p class="note" style="text-align:right;margin:0">جاوب من حفظك</p>
     <div id="ans" hidden><ol class="mpts">${c.pts.map(t=>`<li>${esc(t)}</li>`).join('')}</ol></div>
     <div class="acts" id="acts"><button class="main" id="show">اكشف الجواب</button></div></article>`;
   on('#x',()=>mufGroup(g));
